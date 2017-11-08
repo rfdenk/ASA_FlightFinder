@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASA_FlightFinder", "ASA_FlightFinder\ASA_FlightFinder.csproj", "{D9CE5AEF-067D-4C35-B817-9F50C7F0C430}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASA_FlightFinder.Tests", "ASA_FlightFinder.Tests\ASA_FlightFinder.Tests.csproj", "{0E7AFC13-8FF1-4240-936E-1FE28E63315D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D9CE5AEF-067D-4C35-B817-9F50C7F0C430}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D9CE5AEF-067D-4C35-B817-9F50C7F0C430}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D9CE5AEF-067D-4C35-B817-9F50C7F0C430}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D9CE5AEF-067D-4C35-B817-9F50C7F0C430}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E7AFC13-8FF1-4240-936E-1FE28E63315D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E7AFC13-8FF1-4240-936E-1FE28E63315D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E7AFC13-8FF1-4240-936E-1FE28E63315D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E7AFC13-8FF1-4240-936E-1FE28E63315D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

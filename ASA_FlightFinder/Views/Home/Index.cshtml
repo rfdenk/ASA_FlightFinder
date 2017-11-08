@@ -1,0 +1,72 @@
+﻿@{
+    ViewData["Title"] = "Flight Finder";
+}
+
+<h3>@ViewData["Message"]</h3>
+
+<p>Welcome to the Alaska Airlines Flight Finder!</p>
+@using (Html.BeginForm("ListFlights", "Home", FormMethod.Get, new { role = "form" }))
+{
+    <table style="max-width:300px" class="table-responsive">
+        <tr>
+            <th class="airport-header">Travel:</th>
+            <th class="airport-header">From</th>
+            <th class="airport-header">To</th>
+        </tr>
+        <tr>
+            <td></td>
+            <td class="airport-list">
+                @Html.DropDownList("FromAirport", null, new { @id = "from-airport" })
+            </td>
+            <td class="airport-list">
+                @Html.DropDownList("ToAirport", null, new { @id = "to-airport" })
+            </td>
+            <td><button id="submit-button" type="submit" class="btn btn-primary" disabled="disabled">Find!</button></td>
+        </tr>
+    </table>
+
+}
+
+<script>
+    document.getElementById("from-airport").onchange = function () {
+        //console.log("from airport changed!");
+
+        var fromValue = document.getElementById("from-airport").value;
+        var toSelector = document.getElementById("to-airport");
+
+        // If the to airport is now the same as the from airport, reset it to "Select".
+        if (toSelector.value == fromValue) {
+            toSelector.value = "---";
+        }
+
+        for (var n = 0; n < toSelector.options.length; n++) {
+            if (toSelector.options[n].value == "---") {
+                // keep this one disabled!
+                toSelector.options[n].disabled = true;
+            }
+            else if (toSelector.options[n].value == fromValue) {
+                // You cannot travel to the departure airport.
+                toSelector.options[n].disabled = true;
+            }
+            else {
+                toSelector.options[n].disabled = false;
+            }
+        }
+        enableSubmitIfBothSelected();
+    }
+    document.getElementById("to-airport").onchange = function () {
+        enableSubmitIfBothSelected();
+    }
+
+    function enableSubmitIfBothSelected() {
+        if(
+            (document.getElementById("from-airport").value != "---") &&
+            (document.getElementById("to-airport").value != "---")
+            ) {
+            document.getElementById("submit-button").disabled = false;
+        }
+        else {
+            document.getElementById("submit-button").disabled = true;
+        }
+    }
+</script>

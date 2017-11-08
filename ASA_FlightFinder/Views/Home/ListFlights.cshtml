@@ -1,0 +1,69 @@
+﻿@model List<ASA_FlightFinder.Models.FlightModel>
+
+@using System.Web.Helpers
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script>
+    $(document).ready(function () { updateSortArrows(); });
+
+    function updateSortArrows() {
+        var dir = $("#sortdir").val(); //console.log("Dir = " + dir);
+        var col = $("#sortcol").val(); //console.log("Col = " + col);
+        $("th a").each(function ()
+        {
+            var orig = $(this).width();
+            var origText = $(this).text();
+            $(this).text($(this).text() + " \u25b2");
+            var pad = $(this).width() - orig;
+            //console.log("Padding for " + $(this).text() + " is " + orig + "," + pad);
+            $(this).text(origText);
+            $(this).css({"padding-right":""+(pad+1)+"px"});
+        });
+        var sortHeader = $('th a[href*=' + col + ']');
+        if (dir == "Ascending") {
+            sortHeader.text(sortHeader.text().trimRight() + " \u25b2");
+            sortHeader.css({"padding-right":"0px"});
+        }
+        else if (dir == "Descending") {
+            sortHeader.text(sortHeader.text().trimRight() + " \u25bc");
+            sortHeader.css({"padding-right":"0px"});
+        }
+    }
+
+</script>
+
+@{
+    ViewData["Title"] = "Available Flights";
+}
+
+<h3>Flights from @ViewData["FromAirport"] to @ViewData["ToAirport"]</h3>
+
+@{
+    var flightGrid = new WebGrid(
+            source: Model, canPage: true, canSort:true, rowsPerPage: 7,
+            defaultSort:"DepartureTime",
+            ajaxUpdateContainerId:"flightGrid", ajaxUpdateCallback:"updateSortArrows"
+            );
+}
+<style type="text/css">
+    .flight-row { padding: 5px;}
+</style>
+<div id="flightGrid">
+    @flightGrid.GetHtml(
+        tableStyle: "table table-responsive backcolor",
+        rowStyle:"flight-row",
+        headerStyle:"webgrid-header",
+        columns:flightGrid.Columns(
+            flightGrid.Column(header: "Flight #", columnName: "FlightNumber", canSort: false),
+            flightGrid.Column(header: "Leaves at", columnName:"DepartureTime", 
+                    format:@<text>@item.DepartureTime.ToString("h:mm tt")</text>, canSort: true),
+            flightGrid.Column(header: "Arrives at", columnName:"ArrivalTime", 
+                    format:@<text>@item.ArrivalTime.ToString("h:mm tt")</text>, canSort: false),
+            flightGrid.Column(header: "Price (main cabin)", columnName: "MainCabinPrice", canSort: true),
+            flightGrid.Column(header: "Price (1st class)", columnName: "FirstClassPrice", canSort: true)
+            )
+        )
+    @Html.Hidden("sortdir", flightGrid.SortDirection)
+    @Html.Hidden("sortcol", flightGrid.SortColumn)
+</div>
