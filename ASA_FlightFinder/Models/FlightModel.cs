@@ -10,6 +10,10 @@ namespace ASA_FlightFinder.Models
 {
     public class FlightModel
     {
+        public interface Visitor
+        {
+            void AcceptFlight(FlightModel flight);
+        }
         public FlightModel()
         {
             this.From = "";
