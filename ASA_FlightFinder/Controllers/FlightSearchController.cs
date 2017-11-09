@@ -10,25 +10,16 @@ namespace ASA_FlightFinder.Controllers
 {
     public class FlightSearchController : Controller
     {
-
-        // Get the "app data" from a different place for testing!
-        private class FileFinder
-        {
-            public static string AppDataPath(FlightSearchController controller, string filename)
-            {
-                if(controller.Server == null)
-                {
-                    string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\TestData\" + filename);
-                    return path;
-                }
-                return controller.Server.MapPath("~/App_Data/" + filename);
-            }
-
-        }
+        // This is the starting point. It immediately redirects to FindFlights,
+        // so that the URL is a bit more comprehensible if we arrive at FindFlights
+        // with some URL parameters.
         public ActionResult Index()
         {
             return RedirectToAction("FindFlights", "FlightSearch");
         }
+
+        // Main flight-finder page: allow the user to select flight parameters
+        // and then bounce to ListFlights.
         public ActionResult FindFlights(string from, string to)
         {
             ViewData["Message"] = "Flight Finder";
@@ -47,21 +38,73 @@ namespace ASA_FlightFinder.Controllers
         // A reusable way to visit each airport in the file/datasource.
         private void ProcessAllAirports(AirportModel.Visitor visitor)
         {
-            using(var reader = System.IO.File.OpenText(FileFinder.AppDataPath(this, "airports.csv")))
+            try
             {
-                using (var csv = new CsvHelper.CsvReader(reader))
+                using (var reader = System.IO.File.OpenText(FileFinder.DatasourcePath(this, "airports.csv")))
                 {
-                    IEnumerable<AirportModel> file_airports = csv.GetRecords<AirportModel>();
-                    foreach (var airport in file_airports)
+                    using (var csv = new CsvHelper.CsvReader(reader))
                     {
-                        visitor.AcceptAirport(airport);
+                        IEnumerable<AirportModel> file_airports = csv.GetRecords<AirportModel>();
+                        foreach (var airport in file_airports)
+                        {
+                            visitor.AcceptAirport(airport);
+                        }
                     }
+                }
+            }
+            catch(Exception e)
+            {
+                // Don't send any (more) entries to the visitor.
+            }
+        }
+
+
+
+        // Create a list of SelectListItems for use in <select>.
+        private class AirportSelectionLister: AirportModel.Visitor
+        {
+            private List<SelectListItem> items;
+            string selected;
+            public AirportSelectionLister(List<SelectListItem> items, string selected)
+            {
+                this.items = items;
+                this.selected = selected;
+            }
+
+            public void AcceptAirport(AirportModel airport)
+            {
+                // If this airport code matches the selected airport code, then select it
+                // in the options list. This will override the default selection of "Select..."
+                if (!String.IsNullOrEmpty(this.selected) && airport.Code.Equals(this.selected))
+                {
+                    items.Add(new SelectListItem { Text = airport.Name, Value = airport.Code, Selected = true });
+                }
+                else
+                {
+                    items.Add(new SelectListItem { Text = airport.Name, Value = airport.Code });
                 }
             }
         }
 
+        // Used to populate the dropdown selectors.
+        private IEnumerable<SelectListItem> ListAllAirportSelections(string selected)
+        {
+            List<SelectListItem> airports = new List<SelectListItem>();
+            ProcessAllAirports(new AirportSelectionLister(airports, selected));
+
+            // If any element is already selected, 
+            // then don't select the "Select..." option;
+            // otherwise, do.
+            bool alreadySelected = (airports.Find(delegate (SelectListItem item) { return item.Selected; })!=null);
+
+            SelectListItem dummyEntry = new SelectListItem { Text = "Select...", Value = "---", Selected = !alreadySelected, Disabled = true };
+            airports.Insert(0, dummyEntry);
+
+            return airports;
+        }
+
         // This class extracts the airports as a list of airport models.
-        private class AirportLister: AirportModel.Visitor
+        private class AirportLister : AirportModel.Visitor
         {
             private List<AirportModel> airports;
             public AirportLister(List<AirportModel> airports)
@@ -75,38 +118,6 @@ namespace ASA_FlightFinder.Controllers
             }
         }
 
-        private class AirportSelectionLister: AirportModel.Visitor
-        {
-            private List<SelectListItem> items;
-            string selected;
-            public AirportSelectionLister(List<SelectListItem> items, string selected)
-            {
-                this.items = items;
-                this.selected = selected;
-            }
-
-            public void AcceptAirport(AirportModel airport)
-            {
-                if (!String.IsNullOrEmpty(this.selected) && airport.Code.Equals(this.selected))
-                {
-                    items.Add(new SelectListItem { Text = airport.Name, Value = airport.Code, Selected = true });
-                }
-                else
-                {
-                    items.Add(new SelectListItem { Text = airport.Name, Value = airport.Code });
-                }
-            }
-        }
-
-        // Used to populate the dropdown selectors.
-        private IEnumerable<SelectListItem> ListAllAirportSelections(string select)
-        {
-            List<SelectListItem> airports = new List<SelectListItem>();
-            airports.Add(new SelectListItem { Text = "Select...", Value = "---", Selected = true, Disabled = true });
-            ProcessAllAirports(new AirportSelectionLister(airports, select));
-            return airports;
-        }
-
         [Route("FlightSearch/JSON/ListAllAirports")]
         public ActionResult JsonListAllAirports()
         {
@@ -117,22 +128,26 @@ namespace ASA_FlightFinder.Controllers
 
 
 
-        // The FlightModel exists elsewhere, along with its Visitor interface.
-        // Create a central location to visit each matching flight in the file/datasource.
-       
+        // Create a central location to visit each flight in the file/datasource.
         private void ProcessAllFlights(FlightModel.Visitor visitor)
         {
-            using(var reader = System.IO.File.OpenText(FileFinder.AppDataPath(this, "flights.csv")))
+            try
             {
-                using (var csv = new CsvHelper.CsvReader(reader))
+                using (var reader = System.IO.File.OpenText(FileFinder.DatasourcePath(this, "flights.csv")))
                 {
-                    IEnumerable<FlightModel> file_flights = csv.GetRecords<FlightModel>();
-
-                    foreach (var flight in file_flights)
+                    using (var csv = new CsvHelper.CsvReader(reader))
                     {
-                        visitor.AcceptFlight(flight);
+                        IEnumerable<FlightModel> file_flights = csv.GetRecords<FlightModel>();
+
+                        foreach (var flight in file_flights)
+                        {
+                            visitor.AcceptFlight(flight);
+                        }
                     }
                 }
+            }
+            catch (Exception e){
+                // Don't send any (more) entries to the visitor.
             }
         }
 
@@ -189,7 +204,10 @@ namespace ASA_FlightFinder.Controllers
             ViewData["ToAirport"] = toAirport;
 
             List<FlightModel> flights = new List<FlightModel>();
-            ProcessAllFlights(new MatchingFlightLister(fromAirport, toAirport, flights, false));
+            ProcessAllFlights(new MatchingFlightLister(fromAirport, toAirport, flights, allowMissing: false));
+
+            ViewData["FlightCount"] = flights.Count;
+
             return View(flights);
         }
 
@@ -200,5 +218,23 @@ namespace ASA_FlightFinder.Controllers
             ProcessAllFlights(new MatchingFlightLister(fromAirport, toAirport, flights));
             return Json(flights, JsonRequestBehavior.AllowGet);
         }
-    }
-}
+
+
+
+
+        // Get the data from a different place for testing!
+        private class FileFinder
+        {
+            public static string DatasourcePath(FlightSearchController controller, string filename)
+            {
+                if (controller.Server == null)
+                {
+                    string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\TestData\" + filename);
+                    return path;
+                }
+                return controller.Server.MapPath("~/App_Data/" + filename);
+            }
+        }   // FileFinder
+
+    }   // class
+}   // namespace

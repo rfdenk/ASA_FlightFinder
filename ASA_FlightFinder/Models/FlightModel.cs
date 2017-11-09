@@ -41,22 +41,54 @@ namespace ASA_FlightFinder.Models
         public string To { get; set; }
         public string FlightNumber { get; set; }
         public string Departs { set; get; }
+
         public DateTime DepartureTime {
             get {
-                // Naughty: This inserts the current date, which is weird.
-                DateTime time = DateTime.Parse(Departs);
+                // Note: if this flight is earlier in the day than now,
+                // then show it as occurring tomorrow!
+
+                // TODO: Handle timezones!
+
+                // TODO: A real datasource would include the date of the departure in 
+                // TODO: record, so this should stop being necessary.
+
+                DateTime time = DateTime.Parse(Departs);    // this inserts today's date automatically.
+                DateTime now = DateTime.Now;
+                if(time.CompareTo(now) < 0)
+                {
+                    time = time.AddDays(1.0);
+                }
                 return time;
             }
         }
         public string Arrives { get; set; }
         public DateTime ArrivalTime {
             get {
-                // Naughty: This inserts the current date, which is weird.
-                return DateTime.Parse(Arrives);
+                DateTime time = DateTime.Parse(Arrives);
+
+                // Make sure that the flight arrives after it leaves!
+
+                // TODO: A real datasource will include the date in the record, so
+                // TODO: this should no longer be necessary.
+                // TODO: In that case, validate that the arrival time is after the
+                // TODO: departure time!
+
+                while (time.CompareTo(DepartureTime) < 0)
+                {
+                    time = time.AddDays(1.0);
+                }
+                return time;
             }
         }
         public decimal MainCabinPrice { get; set; }
         public decimal FirstClassPrice { get; set; }
 
+        public TimeSpan Duration
+        {
+            get
+            {
+                return ArrivalTime - DepartureTime;
+            }
+        }
     }
 }

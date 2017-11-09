@@ -41,7 +41,7 @@ namespace ASA_FlightFinder.Tests.Controllers
         public void ListFlights()
         {
             FlightSearchController controller = new FlightSearchController();
-            ViewResult result = controller.ListFlights("SEA","LAX") as ViewResult;
+            ViewResult result = controller.ListFlights("SEA", "LAX") as ViewResult;
 
             Assert.IsNotNull(result);
 
@@ -52,7 +52,12 @@ namespace ASA_FlightFinder.Tests.Controllers
             Assert.IsNotNull(flights);
 
             Assert.AreEqual(flights.Count, 4);
+
+            Assert.AreEqual(result.ViewData["FromAirport"], "SEA");
+            Assert.AreEqual(result.ViewData["ToAirport"], "LAX");
+            Assert.AreEqual(result.ViewData["FlightCount"], 4);
+
         }
-        
+
     }
 }

@@ -7,44 +7,38 @@
 <script>
     $(document).ready(function () { updateSortArrows(); });
 
+    // When the user selects on some column, show the up/down arrow
+    // in that column. We do a little bit of fiddling so that the
+    // column widths do not change when a column becomes the
+    // sort column, or stops being the sort column.
     function updateSortArrows() {
         var dir = $("#sortdir").val(); //console.log("Dir = " + dir);
         var col = $("#sortcol").val(); //console.log("Col = " + col);
-        $("th a").each(function ()
-        {
-            var orig = $(this).width();
-            var origText = $(this).text();
-            $(this).text($(this).text() + " \u25b2");
-            var pad = $(this).width() - orig;
-            //console.log("Padding for " + $(this).text() + " is " + orig + "," + pad);
-            $(this).text(origText);
-            $(this).css({"padding-right":""+(pad+1)+"px"});
-        });
+
+        // Put the appropriate arrow on the appropriate column.
         var sortHeader = $('th a[href*=' + col + ']');
         if (dir == "Ascending") {
-            sortHeader.text(sortHeader.text() + " \u25b2");
-            sortHeader.css({"padding-right":"0px"});
+            sortHeader.html(sortHeader.html() + "<span> \u25b2</span>");
         }
         else if (dir == "Descending") {
-            sortHeader.text(sortHeader.text() + " \u25bc");
-            sortHeader.css({"padding-right":"0px"});
+            sortHeader.html(sortHeader.html() + "<span> \u25bc</span>");
         }
+        // For all of the other sortable headers, put an invisible arrow,
+        // just to keep the header widths constant.
+        var nonSortHeaders = $('th a:not([href*=' + col + '])');
+        $(nonSortHeaders).each(function () {
+            $(this).html($(this).html() + "<span style='opacity:0'> \u25b2</span>")
+        });
     }
 
 </script>
-
-<style type="text/css">
-    th a[href*='sortdir'] {
-        color: black;
-    }
-</style>
 
 @{
     ViewData["Title"] = "Available Flights";
 }
 
 <h3>Flights from @ViewData["FromAirport"] to @ViewData["ToAirport"]</h3>
-
+<p>There are @ViewData["FlightCount"] available flights</p>
 @{
     var flightGrid = new WebGrid(
             source: Model, canPage: true, canSort:true, rowsPerPage: 7,
@@ -53,8 +47,15 @@
             );
 }
 <style type="text/css">
-    .flight-row { padding: 5px;}
+    .flight-row {
+        padding: 5px;
+    }
+    #flightGrid th a[href*='sortdir'] {
+        color: black;
+    }
+    
 </style>
+
 <div id="flightGrid">
     @flightGrid.GetHtml(
         tableStyle: "table table-responsive backcolor",
@@ -63,7 +64,7 @@
         columns:flightGrid.Columns(
             flightGrid.Column(header: "Flight #", columnName: "FlightNumber", canSort: false),
             flightGrid.Column(header: "Leaves at", columnName:"DepartureTime", 
-                    format:@<text>@item.DepartureTime.ToString("h:mm tt")</text>, canSort: true),
+                    format:@<text>@item.DepartureTime.ToString("MMM d, h:mm tt")</text>, canSort: true),
             flightGrid.Column(header: "Arrives at", columnName:"ArrivalTime", 
                     format:@<text>@item.ArrivalTime.ToString("h:mm tt")</text>, canSort: false),
             flightGrid.Column(header: "Price (main cabin)", columnName: "MainCabinPrice",
