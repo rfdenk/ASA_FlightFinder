@@ -18,7 +18,7 @@ namespace ASA_FlightFinder
             routes.MapRoute(
                 name: "Default",
                 url: "{controller}/{action}/{id}",
-                defaults: new { controller = "FlightSearch", action = "FindFlights", id = UrlParameter.Optional }
+                defaults: new { controller = "FlightSearch", action = "Index", id = UrlParameter.Optional }
             );
         }
     }

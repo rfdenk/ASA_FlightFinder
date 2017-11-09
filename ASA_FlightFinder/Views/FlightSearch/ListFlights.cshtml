@@ -22,16 +22,22 @@
         });
         var sortHeader = $('th a[href*=' + col + ']');
         if (dir == "Ascending") {
-            sortHeader.text(sortHeader.text().trimRight() + " \u25b2");
+            sortHeader.text(sortHeader.text() + " \u25b2");
             sortHeader.css({"padding-right":"0px"});
         }
         else if (dir == "Descending") {
-            sortHeader.text(sortHeader.text().trimRight() + " \u25bc");
+            sortHeader.text(sortHeader.text() + " \u25bc");
             sortHeader.css({"padding-right":"0px"});
         }
     }
 
 </script>
+
+<style type="text/css">
+    th a[href*='sortdir'] {
+        color: black;
+    }
+</style>
 
 @{
     ViewData["Title"] = "Available Flights";

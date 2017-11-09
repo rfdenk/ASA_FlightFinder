@@ -10,11 +10,19 @@ namespace ASA_FlightFinder.Controllers
 {
     public class FlightSearchController : Controller
     {
-        public ActionResult FindFlights()
+        public ActionResult Index()
+        {
+            return RedirectToAction("FindFlights", "FlightSearch");
+        }
+        public ActionResult FindFlights(string from, string to)
         {
             ViewData["Message"] = "Flight Finder";
+
             // These values populate the drop-down lists.
-            ViewBag.FromAirport = ViewBag.ToAirport = ListAllAirportSelections();
+            // We _can_ wind up here with a from and/or a to, if the user purposely
+            // manipulates the URL. If so, go ahead and "pre-select" the correct airport.
+            ViewBag.FromAirport = ListAllAirportSelections(from);
+            ViewBag.ToAirport = ListAllAirportSelections(to);
             return View();
         }
 
@@ -77,23 +85,32 @@ namespace ASA_FlightFinder.Controllers
         private class AirportSelectionLister: AirportModel.Visitor
         {
             private List<SelectListItem> items;
-            public AirportSelectionLister(List<SelectListItem> items)
+            string selected;
+            public AirportSelectionLister(List<SelectListItem> items, string selected)
             {
                 this.items = items;
+                this.selected = selected;
             }
 
             public void AcceptAirport(AirportModel airport)
             {
-                items.Add(new SelectListItem { Text = airport.Name, Value = airport.Code });
+                if (!String.IsNullOrEmpty(this.selected) && airport.Code.Equals(this.selected))
+                {
+                    items.Add(new SelectListItem { Text = airport.Name, Value = airport.Code, Selected = true });
+                }
+                else
+                {
+                    items.Add(new SelectListItem { Text = airport.Name, Value = airport.Code });
+                }
             }
         }
 
         // Used to populate the dropdown selectors.
-        private IEnumerable<SelectListItem> ListAllAirportSelections()
+        private IEnumerable<SelectListItem> ListAllAirportSelections(string select)
         {
             List<SelectListItem> airports = new List<SelectListItem>();
             airports.Add(new SelectListItem { Text = "Select", Value = "---", Selected = true, Disabled = true });
-            ProcessAllAirports(new AirportSelectionLister(airports));
+            ProcessAllAirports(new AirportSelectionLister(airports, select));
             return airports;
         }
 
@@ -131,21 +148,30 @@ namespace ASA_FlightFinder.Controllers
             private string fromAirport;
             private string toAirport;
             private List<FlightModel> flights;
-            public MatchingFlightLister(string fromAirport, string toAirport, List<FlightModel> flights)
+            private bool allowMissing;
+
+            public MatchingFlightLister(
+                string fromAirport, string toAirport, 
+                List<FlightModel> flights, bool allowMissing = true)
             {
                 this.fromAirport = fromAirport;
                 this.toAirport = toAirport;
                 this.flights = flights;
+                this.allowMissing = allowMissing;
+            }
+            private bool matchElement(string myString, string flightString)
+            {
+                // if the caller allowsMissing, then
+                //    if the caller fails to specify a from, then ignore it.
+                //    if the caller fails to specify a to, then ignore it.
+                //    note that if both are unspecified, then this operation will return all flights!
+                if (this.allowMissing && String.IsNullOrEmpty(myString)) return true;
+                if (String.IsNullOrEmpty(myString)) return false;
+                return myString.Equals(flightString);
             }
             public void AcceptFlight(FlightModel flight)
             {
-                // if the caller fails to specify a from, then ignore it.
-                // if the caller fails to specify a to, then ignore it.
-                // note that if both are unspecified, then this operation will return all flights!
-                if (
-                    (String.IsNullOrEmpty(fromAirport) || flight.From.Equals(fromAirport)) && 
-                    (String.IsNullOrEmpty(toAirport) || flight.To.Equals(toAirport))
-                    )
+                if (matchElement(this.fromAirport, flight.From) && matchElement(this.toAirport, flight.To))
                 {
                     flights.Add(flight);
                 }
@@ -154,11 +180,23 @@ namespace ASA_FlightFinder.Controllers
 
         public ActionResult ListFlights(string fromAirport, string toAirport)
         {
+            // Gracefully fail if fromAirport or toAirport is missing.
+            // We bounce back to the FlightFinder, and preselect the airports that
+            // are not missing.
+            if (String.IsNullOrEmpty(fromAirport))
+            {
+                return RedirectToAction("FindFlights", "FlightSearch", new { To = toAirport });
+            }
+            if (String.IsNullOrEmpty(toAirport))
+            {
+                return RedirectToAction("FindFlights", "FlightSearch", new { From = fromAirport });
+            }
+
             ViewData["FromAirport"] = fromAirport;
             ViewData["ToAirport"] = toAirport;
 
             List<FlightModel> flights = new List<FlightModel>();
-            ProcessAllFlights(new MatchingFlightLister(fromAirport, toAirport, flights));
+            ProcessAllFlights(new MatchingFlightLister(fromAirport, toAirport, flights, false));
             return View(flights);
         }
 

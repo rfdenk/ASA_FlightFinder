@@ -27,74 +27,14 @@
             </div>
         </div>
     </div>
-
-    <!--
-     <table style="max-width:300px" class="table-responsive">
-        <tr>
-            <th class="airport-header">Travel:</th>
-            <th class="airport-header">From</th>
-            <th class="airport-header">To</th>
-        </tr>
-        <tr>
-            <td></td>
-            <td class="airport-list">
-                @Html.DropDownList("FromAirport", null, new { @id = "from-airport" })
-            </td>
-            <td class="airport-list">
-                @Html.DropDownList("ToAirport", null, new { @id = "to-airport" })
-            </td>
-            <td><button id="submit-button" type="submit" class="btn btn-primary" disabled="disabled">Find!</button></td>
-        </tr>
-    </table>
-        -->
-
-}
-
-<!--
-
-<hr/>
-<hr/>
-
-<div class="container">
-    <div class="row">
-        <div class="col-sm-1 airport-header">
-            From:
-        </div>
-        <div class="col-sm-7 airport-list">
-            @Html.DropDownList("FromAirport", null, new { @id = "from-airport-2" })
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-sm-1 airport-header">To:</div>
-        <div class="col-sm-7 airport-list">
-            @Html.DropDownList("ToAirport", null, new { @id = "to-airport-2" })
-        </div>
-    </div>
-</div>
-
-
-<div class="container">
-    <div class="row">
-        <div class="col-md-1 airport-header">
-            From:
-        </div>
-        <div class="col-md-4 airport-list">
-            @Html.DropDownList("FromAirport", null, new { @id = "from-airport-3" })
-        </div>
-        <div class="col-md-1 airport-header">To:</div>
-        <div class="col-md-4 airport-list">
-            @Html.DropDownList("ToAirport", null, new { @id = "to-airport-3" })
-        </div>
-    </div>
-</div>
-
-
-    -->
+ }
 
 <script>
-    document.getElementById("from-airport").onchange = function () {
-        //console.log("from airport changed!");
 
+    // If the user changes the "from" airport, disable the corresponding element
+    // in the "to" airport list.
+
+    function handleFromAirportChange() {
         var fromValue = document.getElementById("from-airport").value;
         var toSelector = document.getElementById("to-airport");
 
@@ -118,10 +58,8 @@
         }
         enableSubmitIfBothSelected();
     }
-    document.getElementById("to-airport").onchange = function () {
-        enableSubmitIfBothSelected();
-    }
 
+    // Once the user has selected from and to, then the user may click the "Find!" button.
     function enableSubmitIfBothSelected() {
         if(
             (document.getElementById("from-airport").value != "---") &&
@@ -133,4 +71,15 @@
             document.getElementById("submit-button").disabled = true;
         }
     }
+
+    // If, for any reason, the from airport is already selected, handle it
+    // as soon as the document is ready.
+    document.onready = handleFromAirportChange;
+
+    document.getElementById("from-airport").onchange = handleFromAirportChange;
+
+    document.getElementById("to-airport").onchange = function () {
+        enableSubmitIfBothSelected();
+    }
+
 </script>
