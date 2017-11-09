@@ -10,6 +10,21 @@ namespace ASA_FlightFinder.Controllers
 {
     public class FlightSearchController : Controller
     {
+
+        // Get the "app data" from a different place for testing!
+        private class FileFinder
+        {
+            public static string AppDataPath(FlightSearchController controller, string filename)
+            {
+                if(controller.Server == null)
+                {
+                    string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\TestData\" + filename);
+                    return path;
+                }
+                return controller.Server.MapPath("~/App_Data/" + filename);
+            }
+
+        }
         public ActionResult Index()
         {
             return RedirectToAction("FindFlights", "FlightSearch");
@@ -29,32 +44,10 @@ namespace ASA_FlightFinder.Controllers
 
 
 
-        // Define an airport model, and build a reusable way to visit
-        // each airport in the file/datasource.
-        private class AirportModel
-        {
-            public interface Visitor
-            {
-                void AcceptAirport(AirportModel airport);
-            }
-
-            public AirportModel()
-            {
-                this.Code = "";
-                this.Name = "";
-            }
-            public AirportModel(string Code, string Name)
-            {
-                this.Code = Code;
-                this.Name = Name;
-            }
-            public string Code { get; set; }
-            public string Name { get; set; }
-        }
-
+        // A reusable way to visit each airport in the file/datasource.
         private void ProcessAllAirports(AirportModel.Visitor visitor)
         {
-            using (var reader = System.IO.File.OpenText(Server.MapPath("~/App_Data/airports.csv")))
+            using(var reader = System.IO.File.OpenText(FileFinder.AppDataPath(this, "airports.csv")))
             {
                 using (var csv = new CsvHelper.CsvReader(reader))
                 {
@@ -109,7 +102,7 @@ namespace ASA_FlightFinder.Controllers
         private IEnumerable<SelectListItem> ListAllAirportSelections(string select)
         {
             List<SelectListItem> airports = new List<SelectListItem>();
-            airports.Add(new SelectListItem { Text = "Select", Value = "---", Selected = true, Disabled = true });
+            airports.Add(new SelectListItem { Text = "Select...", Value = "---", Selected = true, Disabled = true });
             ProcessAllAirports(new AirportSelectionLister(airports, select));
             return airports;
         }
@@ -129,7 +122,7 @@ namespace ASA_FlightFinder.Controllers
        
         private void ProcessAllFlights(FlightModel.Visitor visitor)
         {
-            using (var reader = System.IO.File.OpenText(Server.MapPath("~/App_Data/flights.csv")))
+            using(var reader = System.IO.File.OpenText(FileFinder.AppDataPath(this, "flights.csv")))
             {
                 using (var csv = new CsvHelper.CsvReader(reader))
                 {

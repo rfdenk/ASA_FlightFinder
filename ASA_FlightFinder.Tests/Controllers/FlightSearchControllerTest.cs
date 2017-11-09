@@ -15,27 +15,43 @@ namespace ASA_FlightFinder.Tests.Controllers
         [TestMethod]
         public void Index()
         {
-            // Arrange
             FlightSearchController controller = new FlightSearchController();
-
-            // Act
-            ViewResult result = controller.FindFlights() as ViewResult;
-
-            // Assert
-            Assert.IsNotNull(result);
+            ViewResult result = controller.Index() as ViewResult;
+            Assert.IsNull(result);  // this is a redirect!
         }
 
         [TestMethod]
+        public void FindFlights()
+        {
+            FlightSearchController controller = new FlightSearchController();
+            ViewResult result = controller.FindFlights(null,null) as ViewResult;
+            Assert.IsNotNull(result);
+
+            Assert.IsNotNull(result.ViewBag);
+            Assert.IsNotNull(result.ViewBag.FromAirport);
+            Assert.AreEqual(result.ViewBag.FromAirport.GetType(), typeof(List<SelectListItem>));
+            Assert.AreEqual(result.ViewBag.FromAirport.Count, 5); // four airports and the "select..."
+
+            Assert.IsNotNull(result.ViewBag.ToAirport);
+            Assert.AreEqual(result.ViewBag.ToAirport.GetType(), typeof(List<SelectListItem>));
+            Assert.AreEqual(result.ViewBag.ToAirport.Count, 5); // four airports and the "select..."
+
+        }
+        [TestMethod]
         public void ListFlights()
         {
-            // Arrange
             FlightSearchController controller = new FlightSearchController();
-
-            // Act
             ViewResult result = controller.ListFlights("SEA","LAX") as ViewResult;
 
-            // Assert
-            //Assert.AreEqual("Your application description page.", result.ViewBag.Message);
+            Assert.IsNotNull(result);
+
+            Assert.IsNotNull(result.Model);
+            Assert.AreEqual(result.Model.GetType(), typeof(List<Models.FlightModel>));
+
+            var flights = result.Model as List<ASA_FlightFinder.Models.FlightModel>;
+            Assert.IsNotNull(flights);
+
+            Assert.AreEqual(flights.Count, 4);
         }
         
     }
